@@ -1,34 +1,42 @@
 import os
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Response, Cookie, HTTPException, Depends
+import warnings
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Response, Cookie, HTTPException
 from pydantic import BaseModel
 from jose import jwt, JWTError
 
 router = APIRouter()
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-production")
-SHARED_PASSWORD = os.environ.get("SHARED_PASSWORD", "")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
+
+def _secret_key() -> str:
+    key = os.environ.get("SECRET_KEY", "change-me-in-production")
+    if key == "change-me-in-production":
+        warnings.warn("SECRET_KEY is using the default insecure value. Set SECRET_KEY env var before deploying.", stacklevel=2)
+    return key
+
+def _shared_password() -> str:
+    return os.environ.get("SHARED_PASSWORD", "")
 
 class LoginRequest(BaseModel):
     password: str
 
 def create_token() -> str:
-    expire = datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS)
-    return jwt.encode({"exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
+    expire = datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRE_HOURS)
+    return jwt.encode({"exp": expire}, _secret_key(), algorithm=ALGORITHM)
 
-def require_auth(access_token: str | None = Cookie(default=None)):
+def require_auth(access_token: str | None = Cookie(default=None)) -> None:
     if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        jwt.decode(access_token, _secret_key(), algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 @router.post("/auth/login")
 def login(body: LoginRequest, response: Response):
-    if body.password != SHARED_PASSWORD:
+    if body.password != _shared_password():
         raise HTTPException(status_code=401, detail="Wrong password")
     token = create_token()
     response.set_cookie(
