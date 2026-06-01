@@ -3,13 +3,22 @@ from docx import Document
 
 
 def _iter_runs(doc: Document):
-    """Yield (run, location_key) for all runs in body paragraphs and tables."""
+    """Yield (run, location_key) for all runs in body paragraphs and tables.
+
+    Merged table cells are deduplicated by tracking seen cell ids to avoid
+    emitting the same cell's text multiple times.
+    """
     for i, para in enumerate(doc.paragraphs):
         for j, run in enumerate(para.runs):
             yield run, ("para", i, j)
     for ti, table in enumerate(doc.tables):
+        seen_cell_ids: set[int] = set()
         for ri, row in enumerate(table.rows):
             for ci, cell in enumerate(row.cells):
+                cell_id = id(cell._tc)
+                if cell_id in seen_cell_ids:
+                    continue
+                seen_cell_ids.add(cell_id)
                 for pi, para in enumerate(cell.paragraphs):
                     for ji, run in enumerate(para.runs):
                         yield run, ("table", ti, ri, ci, pi, ji)
