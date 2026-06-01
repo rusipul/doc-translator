@@ -44,6 +44,8 @@ async def translate_file(
     if not api_key:
         raise HTTPException(status_code=503, detail="API 키가 설정되지 않았습니다")
 
+    # NOTE: file is fully buffered before size check. For production, enforce
+    # the limit at the Nginx/reverse-proxy level (client_max_body_size 20m).
     data = await file.read()
     if len(data) > MAX_SIZE:
         raise HTTPException(status_code=413, detail="파일이 20MB를 초과합니다")
@@ -60,7 +62,7 @@ async def translate_file(
                 [s["text"] for s in segments],
                 target_lang=target_lang,
                 api_key=api_key,
-                source_lang=source_lang or None,
+                source_lang=source_lang,
             )
         except tr.TranslateError as e:
             raise HTTPException(status_code=502, detail=str(e))
