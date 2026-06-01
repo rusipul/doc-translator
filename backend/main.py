@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from auth import router as auth_router, require_auth
+from auth import router as auth_router
+from config import router as config_router
 
 app = FastAPI(title="Doc Translator")
 
@@ -13,11 +14,8 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(config_router)
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-@app.get("/settings", dependencies=[Depends(require_auth)])
-def get_settings_stub():
-    return {"api_key_set": False}
