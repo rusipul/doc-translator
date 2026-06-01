@@ -1,4 +1,4 @@
-import os, json, tempfile, pytest
+import os
 os.environ["SHARED_PASSWORD"] = "testpass"
 os.environ["SECRET_KEY"] = "testsecret"
 
@@ -8,7 +8,7 @@ from main import app
 client = TestClient(app)
 
 def _login():
-    client.post("/auth/login", json={"password": "testpass"})
+    assert client.post("/auth/login", json={"password": "testpass"}).status_code == 200
 
 def test_get_settings_no_key(tmp_path, monkeypatch):
     monkeypatch.setattr("config.CONFIG_PATH", str(tmp_path / "config.json"))
