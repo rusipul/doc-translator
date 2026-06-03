@@ -8,6 +8,8 @@ const LANGUAGES = [
   { code: 'es', name: '스페인어' }, { code: 'vi', name: '베트남어' },
 ]
 
+const ALLOWED_EXTS = new Set(['.docx', '.xlsx', '.pptx'])
+
 type State = 'idle' | 'translating' | 'done' | 'error'
 
 export default function Translate() {
@@ -19,37 +21,63 @@ export default function Translate() {
   const [downloadName, setDownloadName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const isTranslating = state === 'translating'
+
+  const applyFile = (f: File) => {
+    const ext = '.' + f.name.split('.').pop()?.toLowerCase()
+    if (!ALLOWED_EXTS.has(ext)) {
+      setErrorMsg('.docx, .xlsx, .pptx 파일만 지원합니다')
+      setState('error')
+      return
+    }
+    setFile(f)
+    setErrorMsg('')
+    if (state === 'error') setState('idle')
+  }
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    if (isTranslating) return
     const f = e.dataTransfer.files[0]
-    if (f) setFile(f)
+    if (f) applyFile(f)
   }
 
   const handleTranslate = async () => {
-    if (!file) return
+    if (!file || isTranslating) return
     if (file.size > 20 * 1024 * 1024) {
       setErrorMsg('파일이 20MB를 초과합니다')
+      setState('error')
       return
     }
+
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl)
+    setDownloadUrl('')
     setState('translating')
     setErrorMsg('')
-    const res = await api.translate(file, targetLang)
-    if (res.ok) {
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const disposition = res.headers.get('content-disposition') || ''
-      const match = disposition.match(/filename="(.+)"/)
-      setDownloadUrl(url)
-      setDownloadName(match?.[1] ?? 'translated_file')
-      setState('done')
-    } else {
-      const body = await res.json().catch(() => ({}))
-      setErrorMsg(body.detail ?? '번역에 실패했습니다')
+
+    try {
+      const res = await api.translate(file, targetLang)
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const disposition = res.headers.get('content-disposition') || ''
+        const match = disposition.match(/filename="(.+)"/)
+        setDownloadUrl(url)
+        setDownloadName(match?.[1] ?? 'translated_file')
+        setState('done')
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setErrorMsg((body as { detail?: string }).detail ?? '번역에 실패했습니다')
+        setState('error')
+      }
+    } catch {
+      setErrorMsg('네트워크 오류가 발생했습니다')
       setState('error')
     }
   }
 
   const reset = () => {
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl)
     setFile(null)
     setState('idle')
     setDownloadUrl('')
@@ -65,10 +93,11 @@ export default function Translate() {
       <div
         onDrop={handleDrop}
         onDragOver={e => e.preventDefault()}
-        onClick={() => inputRef.current?.click()}
-        style={{ border: '2px dashed #3b5bdb', borderRadius: 12, padding: 40, textAlign: 'center', cursor: 'pointer', background: '#1a1a2e' }}
+        onClick={() => !isTranslating && inputRef.current?.click()}
+        style={{ border: '2px dashed #3b5bdb', borderRadius: 12, padding: 40, textAlign: 'center', cursor: isTranslating ? 'default' : 'pointer', background: '#1a1a2e' }}
       >
-        <input ref={inputRef} type="file" accept=".docx,.xlsx,.pptx" hidden onChange={e => setFile(e.target.files?.[0] ?? null)} />
+        <input ref={inputRef} type="file" accept=".docx,.xlsx,.pptx" hidden
+          onChange={e => { const f = e.target.files?.[0]; if (f) applyFile(f) }} />
         <p style={{ fontSize: 24 }}>📂</p>
         <p style={{ color: '#74c0fc', fontWeight: 'bold' }}>
           {file ? file.name : '파일을 드래그하거나 클릭해서 선택'}
