@@ -1,5 +1,6 @@
 import io
 import traceback
+import urllib.parse
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from auth import require_auth
@@ -80,8 +81,12 @@ async def translate_file(
     stem = (file.filename or "file").rsplit(".", 1)[0]
     out_name = f"{stem}_{target_lang.upper()}.{ext}"
 
+    # HTTP headers must be latin-1; use RFC 5987 encoding for non-ASCII filenames
+    encoded_name = urllib.parse.quote(out_name)
+    content_disposition = f"attachment; filename*=UTF-8''{encoded_name}"
+
     return Response(
         content=result,
         media_type=mime,
-        headers={"Content-Disposition": f'attachment; filename="{out_name}"'},
+        headers={"Content-Disposition": content_disposition},
     )

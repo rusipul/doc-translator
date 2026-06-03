@@ -61,13 +61,18 @@ export default function Translate() {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const disposition = res.headers.get('content-disposition') || ''
-        const match = disposition.match(/filename="(.+)"/)
+        // Support RFC 5987 (filename*=UTF-8''...) and legacy (filename="...")
+        const rfc5987 = disposition.match(/filename\*=UTF-8''([^;]+)/i)
+        const legacy = disposition.match(/filename="([^"]+)"/)
+        const rawName = rfc5987 ? decodeURIComponent(rfc5987[1]) : (legacy?.[1] ?? 'translated_file')
         setDownloadUrl(url)
-        setDownloadName(match?.[1] ?? 'translated_file')
+        setDownloadName(rawName)
         setState('done')
       } else {
         const body = await res.json().catch(() => ({}))
-        setErrorMsg((body as { detail?: string }).detail ?? '번역에 실패했습니다')
+        const detail = (body as { detail?: unknown }).detail
+        const msg = typeof detail === 'string' ? detail : JSON.stringify(detail)
+        setErrorMsg(`[${res.status}] ${msg || '번역에 실패했습니다'}`)
         setState('error')
       }
     } catch {
