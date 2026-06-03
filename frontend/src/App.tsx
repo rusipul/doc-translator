@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Login from './pages/Login'
 import Translate from './pages/Translate'
 import Settings from './pages/Settings'
+import Logo from './components/Logo'
 
 type Page = 'login' | 'translate' | 'settings'
 
@@ -11,16 +12,46 @@ export default function App() {
   if (page === 'login') return <Login onSuccess={() => setPage('translate')} />
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: 24 }}>
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <span style={{ fontWeight: 'bold', fontSize: 18 }}>📄 Doc Translator</span>
-        <div style={{ display: 'flex', gap: 16, fontSize: 14 }}>
-          <button onClick={() => setPage('translate')} style={{ background: 'none', border: 'none', color: page === 'translate' ? '#74c0fc' : '#888', cursor: 'pointer' }}>번역</button>
-          <button onClick={() => setPage('settings')} style={{ background: 'none', border: 'none', color: page === 'settings' ? '#74c0fc' : '#888', cursor: 'pointer' }}>설정</button>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px 40px' }}>
+      {/* Header */}
+      <nav style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 0',
+        marginBottom: 32,
+        borderBottom: '1px solid #222',
+      }}>
+        <Logo size="sm" />
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <NavButton label="번역" active={page === 'translate'} onClick={() => setPage('translate')} />
+          <NavButton label="설정" active={page === 'settings'} onClick={() => setPage('settings')} />
         </div>
       </nav>
+
       {page === 'translate' && <Translate />}
       {page === 'settings' && <Settings />}
     </div>
+  )
+}
+
+function NavButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '6px 14px',
+        borderRadius: 6,
+        border: 'none',
+        background: active ? '#E31E24' : 'transparent',
+        color: active ? '#fff' : '#888',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: active ? 600 : 400,
+        transition: 'all 0.15s',
+      }}
+    >
+      {label}
+    </button>
   )
 }
