@@ -11,7 +11,9 @@ if (-not (Test-Path $envFile)) {
     $pw = Read-Host "  Set team password"
     $chars = (65..90) + (97..122) + (48..57)
     $secret = -join ($chars | Get-Random -Count 32 | ForEach-Object { [char]$_ })
-    Set-Content $envFile -Encoding utf8 -Value "SHARED_PASSWORD=$pw`nSECRET_KEY=$secret"
+    # Use UTF8 without BOM (PowerShell 5.1 Set-Content adds BOM with -Encoding utf8)
+    $envContent = "SHARED_PASSWORD=$pw`nSECRET_KEY=$secret"
+    [System.IO.File]::WriteAllText($envFile, $envContent, [System.Text.UTF8Encoding]::new($false))
     Write-Host ""
     Write-Host "  Created .env file." -ForegroundColor Green
 }

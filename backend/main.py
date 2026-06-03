@@ -1,5 +1,6 @@
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+# encoding='utf-8-sig' strips BOM written by PowerShell Set-Content -Encoding utf8
+load_dotenv(find_dotenv(), encoding='utf-8-sig')
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
