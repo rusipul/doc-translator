@@ -1,5 +1,8 @@
+// In production, VITE_API_BASE_URL points to the Render backend URL
+const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
+
 async function request(path: string, init?: RequestInit): Promise<Response> {
-  const res = await fetch(path, { credentials: 'include', ...init })
+  const res = await fetch(`${BASE}${path}`, { credentials: 'include', ...init })
   if (res.status === 401) {
     window.location.href = '/'
   }

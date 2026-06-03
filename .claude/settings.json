@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash \"C:/Users/k/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/Users/k/DEV/chapter1\")",
+      "PowerShell(cd \"c:\\\\Users\\\\k\\\\DEV\\\\chapter1\\\\backend\"; Start-Process -FilePath \".\\\\.venv\\\\Scripts\\\\uvicorn.exe\" -ArgumentList \"main:app\",\"--port\",\"8000\" -NoNewWindow -PassThru | Out-Null; Start-Sleep -Seconds 3; try { $response = Invoke-WebRequest -Uri \"http://localhost:8000/health\" -UseBasicParsing -TimeoutSec 5; $response.Content } catch { \"ERROR: $_\" })",
+      "PowerShell(Stop-Process -Name \"uvicorn\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(.venv\\\\Scripts\\\\activate)",
+      "Bash(pytest tests/test_auth.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_auth.py -v)",
+      "Bash(python -c \"import os; os.environ['SHARED_PASSWORD']='testpass'; os.environ['SECRET_KEY']='testsecret'; import auth; print\\('SECRET_KEY in auth module:', auth.SECRET_KEY, '| SHARED_PASSWORD:', repr\\(auth.SHARED_PASSWORD\\)\\)\")",
+      "Bash(Get-ChildItem -Name)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/test_auth.py -v)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\k\\\\DEV\\\\chapter1\\\\backend\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"C:\\\\Users\\\\k\\\\DEV\\\\chapter1\\\\backend\"\\)\\) { Write-Output \"backend dir not found\" })",
+      "Bash(.venv/Scripts/python -m pytest tests/test_processor_xlsx.py -v)",
+      "Bash(timeout 15 npm run dev)",
+      "PowerShell(powershell -NoProfile -Command \"Get-Content 'c:\\\\Users\\\\k\\\\DEV\\\\chapter1\\\\start.ps1' | Out-Null; Write-Host 'Syntax OK'\")"
+    ]
+  }
+}

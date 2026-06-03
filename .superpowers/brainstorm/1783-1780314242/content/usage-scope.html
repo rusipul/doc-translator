@@ -1,0 +1,40 @@
+<h2>누가 사용하는 서비스인가요?</h2>
+<p class="subtitle">사용자 범위에 따라 로그인·요금·구조가 달라집니다</p>
+
+<div class="options">
+  <div class="option" data-choice="personal" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>나 혼자 (개인용)</h3>
+      <p>로컬 또는 사설 서버에서 혼자 사용. 로그인 불필요, API 키는 내 것 하나만.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>구현 단순</li><li>인증 불필요</li><li>비용 예측 쉬움</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>타인과 공유 어려움</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="team" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>팀·사내 (소수 인원)</h3>
+      <p>회사나 팀 내부용. 간단한 인증(비밀번호 또는 구글 로그인), API 키는 공용.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>팀원과 공유</li><li>간단한 접근 제어</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>인증 기능 필요</li><li>API 비용 공유 관리</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="public" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>공개 서비스 (누구나)</h3>
+      <p>불특정 다수가 사용하는 SaaS. 회원가입, 사용량 제한, 요금제 등 필요.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>수익화 가능</li><li>광범위한 사용자</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>구현 복잡도 높음</li><li>보안·인프라 관리 부담</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

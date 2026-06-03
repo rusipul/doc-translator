@@ -22,7 +22,8 @@ def _write(data: dict):
     tmp.replace(p)
 
 def get_api_key() -> str | None:
-    return _read().get("google_api_key")
+    # Settings UI takes priority; fall back to environment variable
+    return _read().get("google_api_key") or os.environ.get("GOOGLE_TRANSLATE_API_KEY")
 
 class ApiKeyRequest(BaseModel):
     api_key: str

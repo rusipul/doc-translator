@@ -10,6 +10,9 @@ router = APIRouter()
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
+# True when deployed to production (set PRODUCTION=true on Render)
+_IS_PRODUCTION = os.environ.get("PRODUCTION", "false").lower() == "true"
+
 def _secret_key() -> str:
     key = os.environ.get("SECRET_KEY", "change-me-in-production")
     if key == "change-me-in-production":
@@ -44,7 +47,9 @@ def login(body: LoginRequest, response: Response):
         value=token,
         httponly=True,
         max_age=TOKEN_EXPIRE_HOURS * 3600,
-        samesite="lax",
+        # Cross-domain (Vercel frontend + Render backend) requires SameSite=None + Secure
+        samesite="none" if _IS_PRODUCTION else "lax",
+        secure=_IS_PRODUCTION,
     )
     return {"ok": True}
 

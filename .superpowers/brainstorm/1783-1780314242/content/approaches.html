@@ -1,0 +1,57 @@
+<h2>어떤 기술 스택으로 만들까요?</h2>
+<p class="subtitle">파일 처리 품질과 개발 복잡도의 트레이드오프</p>
+
+<div class="options">
+  <div class="option" data-choice="python-react" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Python FastAPI + React <span style="font-size:12px;color:#4ade80;font-weight:normal;">★ 추천</span></h3>
+      <p>Python은 Office 파일 처리 라이브러리가 가장 성숙. React로 쾌적한 UI.</p>
+      <div style="background:#1a1a2e;border-radius:8px;padding:12px;margin:10px 0;font-size:12px;font-family:monospace">
+        <div style="color:#64b5f6">브라우저 → React UI</div>
+        <div style="color:#888;margin:4px 0">↕ HTTP API</div>
+        <div style="color:#81c784">FastAPI 서버</div>
+        <div style="color:#888;font-size:11px;margin-left:16px">python-docx / openpyxl / python-pptx</div>
+        <div style="color:#888;font-size:11px;margin-left:16px">Google Translate API</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>파일 처리 품질 최고</li><li>각 역할 분리 명확</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>서버 2개 (개발 시)</li><li>배포 설정 필요</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="nextjs" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Next.js 풀스택</h3>
+      <p>프론트·백엔드 하나의 코드베이스. JS 기반 Office 라이브러리 사용.</p>
+      <div style="background:#1a1a2e;border-radius:8px;padding:12px;margin:10px 0;font-size:12px;font-family:monospace">
+        <div style="color:#64b5f6">브라우저 → Next.js (UI + API Routes)</div>
+        <div style="color:#888;font-size:11px;margin-left:16px">xlsx / pptxgenjs / mammoth</div>
+        <div style="color:#888;font-size:11px;margin-left:16px">Google Translate API</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>단일 코드베이스</li><li>Vercel 원클릭 배포</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>JS Office 라이브러리 한계</li><li>복잡한 포맷 깨짐 가능</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="python-simple" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Python FastAPI + 단순 HTML</h3>
+      <p>Python 서버 하나로 UI까지 제공. 프레임워크 없이 가장 단순한 구성.</p>
+      <div style="background:#1a1a2e;border-radius:8px;padding:12px;margin:10px 0;font-size:12px;font-family:monospace">
+        <div style="color:#64b5f6">브라우저 → Jinja2 HTML 템플릿</div>
+        <div style="color:#888;margin:4px 0">↕</div>
+        <div style="color:#81c784">FastAPI (파일처리 + 번역 + UI)</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>장점</h4><ul><li>구조 가장 단순</li><li>서버 하나만 관리</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>UI 개선 어려움</li><li>React 같은 반응형 UX 불가</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

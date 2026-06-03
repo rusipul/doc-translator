@@ -2,6 +2,7 @@ from dotenv import load_dotenv, find_dotenv
 # encoding='utf-8-sig' strips BOM written by PowerShell Set-Content -Encoding utf8
 load_dotenv(find_dotenv(), encoding='utf-8-sig')
 
+import os
 import traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,9 +13,11 @@ from routers.translate_router import router as translate_router
 
 app = FastAPI(title="Doc Translator")
 
+# ALLOWED_ORIGINS env var: comma-separated list of production frontend URLs
+_extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173"] + _extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

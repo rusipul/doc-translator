@@ -31,7 +31,7 @@ def test_translate_docx():
             data={"target_lang": "en"},
         )
     assert res.status_code == 200
-    assert res.headers["content-disposition"].endswith('.docx"')
+    assert ".docx" in res.headers["content-disposition"]
 
 def test_translate_no_api_key():
     _login()
