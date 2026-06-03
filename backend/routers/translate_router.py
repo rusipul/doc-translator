@@ -1,4 +1,5 @@
 import io
+import traceback
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from auth import require_auth
@@ -64,12 +65,17 @@ async def translate_file(
                 api_key=api_key,
                 source_lang=source_lang,
             )
-        except tr.TranslateError as e:
+        except Exception as e:
+            traceback.print_exc()
             raise HTTPException(status_code=502, detail=str(e))
     else:
         translated = []
 
-    result = reinsert(data, segments, translated)
+    try:
+        result = reinsert(data, segments, translated)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"파일 재조립 실패: {str(e)}")
 
     stem = (file.filename or "file").rsplit(".", 1)[0]
     out_name = f"{stem}_{target_lang.upper()}.{ext}"
