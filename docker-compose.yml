@@ -1,0 +1,17 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      - SHARED_PASSWORD=${SHARED_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./backend/config.json:/app/config.json
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
