@@ -9,6 +9,7 @@ import translate as tr
 from processors import docx as docx_proc
 from processors import xlsx as xlsx_proc
 from processors import pptx as pptx_proc
+from processors import pdf as pdf_proc
 
 router = APIRouter()
 
@@ -29,6 +30,11 @@ PROCESSORS = {
         pptx_proc.extract_texts,
         pptx_proc.reinsert_texts,
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ),
+    "pdf": (
+        pdf_proc.extract_texts,
+        pdf_proc.reinsert_texts,
+        "application/pdf",
     ),
 }
 
