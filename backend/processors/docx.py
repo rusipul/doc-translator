@@ -4,13 +4,14 @@ from docx import Document
 
 def _iter_table_runs(table, base_key: tuple):
     """Yield (run, key) for all runs in a table, recursing into nested tables."""
-    seen_cell_ids: set[int] = set()
+    # Keep strong references to _tc proxies so lxml doesn't GC them.
+    # Using id() is unreliable: freed proxy addresses get reused for unrelated cells.
+    seen_tcs: set = set()
     for ri, row in enumerate(table.rows):
         for ci, cell in enumerate(row.cells):
-            cell_id = id(cell._tc)
-            if cell_id in seen_cell_ids:
+            if cell._tc in seen_tcs:
                 continue
-            seen_cell_ids.add(cell_id)
+            seen_tcs.add(cell._tc)
             cell_key = (*base_key, ri, ci)
             for pi, para in enumerate(cell.paragraphs):
                 for ji, run in enumerate(para.runs):
