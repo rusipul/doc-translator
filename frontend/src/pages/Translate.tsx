@@ -128,7 +128,14 @@ export default function Translate() {
             style={{ padding: 12, borderRadius: 8, background: file ? '#3b5bdb' : '#333', color: '#fff', border: 'none', cursor: file ? 'pointer' : 'not-allowed', fontSize: 15 }}>
             번역 시작
           </button>
-          {errorMsg && <p style={{ color: '#e03131', fontSize: 13 }}>{errorMsg}</p>}
+          {errorMsg && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ color: '#e03131', fontSize: 13, margin: 0 }}>{errorMsg}</p>
+              <button onClick={reset} style={{ padding: 8, background: 'none', border: '1px solid #444', borderRadius: 6, color: '#888', cursor: 'pointer' }}>
+                다른 파일 선택하기
+              </button>
+            </div>
+          )}
         </>
       ) : state === 'translating' ? (
         <div style={{ padding: 20, textAlign: 'center', color: '#74c0fc' }}>
