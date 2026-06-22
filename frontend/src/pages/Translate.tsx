@@ -8,7 +8,7 @@ const LANGUAGES = [
   { code: 'es', name: '스페인어' }, { code: 'vi', name: '베트남어' },
 ]
 
-const ALLOWED_EXTS = new Set(['.docx', '.xlsx', '.pptx'])
+const ALLOWED_EXTS = new Set(['.docx', '.xlsx', '.pptx', '.pdf'])
 
 type State = 'idle' | 'translating' | 'done' | 'error'
 
@@ -26,7 +26,7 @@ export default function Translate() {
   const applyFile = (f: File) => {
     const ext = '.' + f.name.split('.').pop()?.toLowerCase()
     if (!ALLOWED_EXTS.has(ext)) {
-      setErrorMsg('.docx, .xlsx, .pptx 파일만 지원합니다')
+      setErrorMsg('.docx, .xlsx, .pptx, .pdf 파일만 지원합니다')
       setState('error')
       return
     }
@@ -101,13 +101,13 @@ export default function Translate() {
         onClick={() => !isTranslating && inputRef.current?.click()}
         style={{ border: '2px dashed #3b5bdb', borderRadius: 12, padding: 40, textAlign: 'center', cursor: isTranslating ? 'default' : 'pointer', background: '#1a1a2e' }}
       >
-        <input ref={inputRef} type="file" accept=".docx,.xlsx,.pptx" hidden
+        <input ref={inputRef} type="file" accept=".docx,.xlsx,.pptx,.pdf" hidden
           onChange={e => { const f = e.target.files?.[0]; if (f) applyFile(f) }} />
         <p style={{ fontSize: 24 }}>📂</p>
         <p style={{ color: '#74c0fc', fontWeight: 'bold' }}>
           {file ? file.name : '파일을 드래그하거나 클릭해서 선택'}
         </p>
-        <p style={{ color: '#888', fontSize: 12 }}>.docx · .xlsx · .pptx · 최대 20MB</p>
+        <p style={{ color: '#888', fontSize: 12 }}>.docx · .xlsx · .pptx · .pdf · 최대 20MB</p>
       </div>
 
       {/* Language select */}
