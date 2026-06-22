@@ -2,26 +2,30 @@ import io
 from docx import Document
 
 
-def _iter_runs(doc: Document):
-    """Yield (run, location_key) for all runs in body paragraphs and tables.
+def _iter_table_runs(table, base_key: tuple):
+    """Yield (run, key) for all runs in a table, recursing into nested tables."""
+    seen_cell_ids: set[int] = set()
+    for ri, row in enumerate(table.rows):
+        for ci, cell in enumerate(row.cells):
+            cell_id = id(cell._tc)
+            if cell_id in seen_cell_ids:
+                continue
+            seen_cell_ids.add(cell_id)
+            cell_key = (*base_key, ri, ci)
+            for pi, para in enumerate(cell.paragraphs):
+                for ji, run in enumerate(para.runs):
+                    yield run, (*cell_key, pi, ji)
+            for nti, nested_table in enumerate(cell.tables):
+                yield from _iter_table_runs(nested_table, (*cell_key, nti))
 
-    Merged table cells are deduplicated by tracking seen cell ids to avoid
-    emitting the same cell's text multiple times.
-    """
+
+def _iter_runs(doc: Document):
+    """Yield (run, key) for all runs in body paragraphs and tables."""
     for i, para in enumerate(doc.paragraphs):
         for j, run in enumerate(para.runs):
             yield run, ("para", i, j)
     for ti, table in enumerate(doc.tables):
-        seen_cell_ids: set[int] = set()
-        for ri, row in enumerate(table.rows):
-            for ci, cell in enumerate(row.cells):
-                cell_id = id(cell._tc)
-                if cell_id in seen_cell_ids:
-                    continue
-                seen_cell_ids.add(cell_id)
-                for pi, para in enumerate(cell.paragraphs):
-                    for ji, run in enumerate(para.runs):
-                        yield run, ("table", ti, ri, ci, pi, ji)
+        yield from _iter_table_runs(table, ("table", ti))
 
 
 def extract_texts(file_bytes: bytes) -> list[dict]:
