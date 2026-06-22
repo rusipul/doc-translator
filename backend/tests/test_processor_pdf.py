@@ -54,3 +54,19 @@ def test_reinsert_preserves_page_count():
     assert len(result_doc) == len(original_doc)
     original_doc.close()
     result_doc.close()
+
+
+def _make_image_only_pdf() -> bytes:
+    """텍스트 없이 빈 페이지만 있는 PDF (스캔본 시뮬레이션)."""
+    doc = fitz.open()
+    doc.new_page()
+    buf = io.BytesIO()
+    doc.save(buf)
+    doc.close()
+    return buf.getvalue()
+
+
+def test_image_only_pdf_raises_value_error():
+    data = _make_image_only_pdf()
+    with pytest.raises(ValueError, match="텍스트가 없는 PDF"):
+        extract_texts(data)
