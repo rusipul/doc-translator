@@ -1,0 +1,35 @@
+import io
+import pytest
+import fitz
+from processors.pdf import extract_texts
+
+
+def _make_pdf(texts: list[str]) -> bytes:
+    doc = fitz.open()
+    page = doc.new_page()
+    font = fitz.Font(fontfile="C:/Windows/Fonts/malgun.ttf")
+    tw = fitz.TextWriter(page.rect)
+    y = 72
+    for text in texts:
+        tw.append((72, y), text, font=font, fontsize=12)
+        y += 20
+    tw.write_text(page)
+    buf = io.BytesIO()
+    doc.save(buf)
+    doc.close()
+    return buf.getvalue()
+
+
+def test_extract_texts():
+    data = _make_pdf(["안녕하세요", "테스트"])
+    segments = extract_texts(data)
+    texts = [s["text"] for s in segments]
+    assert "안녕하세요" in texts
+    assert "테스트" in texts
+
+
+def test_extract_keys_are_unique():
+    data = _make_pdf(["첫번째", "두번째", "세번째"])
+    segments = extract_texts(data)
+    keys = [tuple(s["key"]) for s in segments]
+    assert len(keys) == len(set(keys))
