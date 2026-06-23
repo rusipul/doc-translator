@@ -1,18 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../api'
 import Logo from '../components/Logo'
+
+const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export default function Login({ onSuccess }: { onSuccess: () => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [slowLoading, setSlowLoading] = useState(false)
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Warmup ping: wake Render out of sleep while user types password
+  useEffect(() => {
+    fetch(`${BASE}/health`).catch(() => {})
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setSlowLoading(false)
     setError('')
+    slowTimer.current = setTimeout(() => setSlowLoading(true), 5000)
     const res = await api.login(password)
+    if (slowTimer.current) clearTimeout(slowTimer.current)
     setLoading(false)
+    setSlowLoading(false)
     if (res.ok) {
       onSuccess()
     } else {
@@ -82,7 +95,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             transition: 'background 0.15s',
           }}
         >
-          {loading ? '확인 중...' : '로그인'}
+          {loading ? (slowLoading ? '서버 기동 중... (잠시 기다려 주세요)' : '확인 중...') : '로그인'}
         </button>
       </form>
     </div>
