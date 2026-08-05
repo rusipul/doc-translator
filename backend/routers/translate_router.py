@@ -84,8 +84,13 @@ async def translate_file(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"파일 재조립 실패: {str(e)}")
 
+    _LANG_SUFFIX = {
+        "en": "eng", "ja": "jpn", "zh": "chn", "ko": "kor",
+        "fr": "fra", "de": "deu", "es": "esp", "vi": "vie",
+    }
+    suffix = _LANG_SUFFIX.get(target_lang, target_lang)
     stem = (file.filename or "file").rsplit(".", 1)[0]
-    out_name = f"{stem}_{target_lang.upper()}.{ext}"
+    out_name = f"{stem}_{suffix}.{ext}"
 
     # HTTP headers must be latin-1; use RFC 5987 encoding for non-ASCII filenames
     encoded_name = urllib.parse.quote(out_name)
