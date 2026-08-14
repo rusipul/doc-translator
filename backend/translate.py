@@ -36,15 +36,19 @@ def batch_translate(
 
     for i in range(0, len(texts), BATCH_SIZE):
         chunk = texts[i: i + BATCH_SIZE]
+
+        # Use numbered keys so the model cannot merge or skip items
+        numbered = {str(j): text for j, text in enumerate(chunk)}
         prompt = (
             f"Translate the following texts to {lang_name}. "
-            "Return a JSON object with a single key \"translations\" containing an array of translated strings "
-            "in exactly the same order as the input. Do not add explanations.\n\n"
-            f"Input: {json.dumps(chunk, ensure_ascii=False)}"
+            "The input is a JSON object where keys are numeric indices and values are texts to translate. "
+            "Return a JSON object with the same numeric keys and translated strings as values. "
+            "Every key must be present in the output. Do not add explanations.\n\n"
+            f"Input: {json.dumps(numbered, ensure_ascii=False)}"
         )
 
         last_exc: Exception | None = None
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",
@@ -56,14 +60,13 @@ def batch_translate(
                     temperature=0.1,
                 )
                 body = json.loads(response.choices[0].message.content)
-                translations = body["translations"]
-                if len(translations) != len(chunk):
-                    raise TranslateError(f"Expected {len(chunk)} translations, got {len(translations)}")
-                results.extend(translations)
+                # Reconstruct in original order by numeric key
+                translated = [body[str(j)] for j in range(len(chunk))]
+                results.extend(translated)
                 last_exc = None
                 break
-            except TranslateError:
-                raise
+            except (KeyError, TypeError) as e:
+                last_exc = TranslateError(f"Unexpected response format: {e}")
             except Exception as e:
                 last_exc = e
 
