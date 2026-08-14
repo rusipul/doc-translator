@@ -74,12 +74,18 @@ async def translate_file(
     if segments:
         try:
             translator = tr_google if engine == "google" else tr
-            translated = translator.batch_translate(
-                [s["text"] for s in segments],
+            raw_texts = [s["text"] for s in segments]
+            translated_raw = translator.batch_translate(
+                [t.strip() for t in raw_texts],
                 target_lang=target_lang,
                 api_key=api_key,
                 source_lang=source_lang,
             )
+            # Re-attach leading/trailing whitespace the AI may have stripped
+            translated = [
+                orig[: len(orig) - len(orig.lstrip())] + tr_text + orig[len(orig.rstrip()):]
+                for orig, tr_text in zip(raw_texts, translated_raw)
+            ]
         except Exception as e:
             traceback.print_exc()
             raise HTTPException(status_code=502, detail=str(e))
