@@ -1,27 +1,22 @@
-import html
 import json
-import urllib.request
-import urllib.error
+from openai import OpenAI
 
-# Google Translate v2 maximum strings per request
-BATCH_SIZE = 128
-_API_URL = "https://translation.googleapis.com/language/translate/v2"
+BATCH_SIZE = 50
+
+_LANG_NAMES = {
+    "en": "English",
+    "ja": "Japanese",
+    "zh": "Chinese (Simplified)",
+    "ko": "Korean",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "vi": "Vietnamese",
+}
 
 
 class TranslateError(Exception):
     pass
-
-
-def _call_api(api_key: str, payload: dict) -> dict:
-    url = f"{_API_URL}?key={api_key}"
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())
 
 
 def batch_translate(
@@ -35,26 +30,40 @@ def batch_translate(
     if not api_key:
         raise TranslateError("API key is not set")
 
+    lang_name = _LANG_NAMES.get(target_lang, target_lang)
+    client = OpenAI(api_key=api_key)
     results: list[str] = []
 
     for i in range(0, len(texts), BATCH_SIZE):
-        chunk = texts[i : i + BATCH_SIZE]
-        payload: dict = {"q": chunk, "target": target_lang, "format": "text"}
-        if source_lang:
-            payload["source"] = source_lang
+        chunk = texts[i: i + BATCH_SIZE]
+        prompt = (
+            f"Translate the following texts to {lang_name}. "
+            "Return a JSON object with a single key \"translations\" containing an array of translated strings "
+            "in exactly the same order as the input. Do not add explanations.\n\n"
+            f"Input: {json.dumps(chunk, ensure_ascii=False)}"
+        )
 
         last_exc: Exception | None = None
         for attempt in range(2):
             try:
-                body = _call_api(api_key, payload)
-                translations = body["data"]["translations"]
-                # Google Translate v2 returns HTML-escaped text; decode it
-                results.extend(html.unescape(t["translatedText"]) for t in translations)
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional translator. Translate accurately and naturally, preserving the original meaning and tone."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                )
+                body = json.loads(response.choices[0].message.content)
+                translations = body["translations"]
+                if len(translations) != len(chunk):
+                    raise TranslateError(f"Expected {len(chunk)} translations, got {len(translations)}")
+                results.extend(translations)
                 last_exc = None
                 break
-            except urllib.error.HTTPError as e:
-                err_body = e.read().decode(errors="replace")
-                last_exc = TranslateError(f"HTTP {e.code}: {err_body}")
+            except TranslateError:
+                raise
             except Exception as e:
                 last_exc = e
 

@@ -23,7 +23,7 @@ def _write(data: dict):
 
 def get_api_key() -> str | None:
     # Settings UI takes priority; fall back to environment variable
-    return _read().get("google_api_key") or os.environ.get("GOOGLE_TRANSLATE_API_KEY")
+    return _read().get("openai_api_key") or os.environ.get("OPENAI_API_KEY")
 
 class ApiKeyRequest(BaseModel):
     api_key: str
@@ -37,6 +37,6 @@ def update_api_key(body: ApiKeyRequest):
     if not body.api_key.strip():
         raise HTTPException(status_code=400, detail="API key cannot be empty")
     data = _read()
-    data["google_api_key"] = body.api_key.strip()
+    data["openai_api_key"] = body.api_key.strip()
     _write(data)
     return {"ok": True}
