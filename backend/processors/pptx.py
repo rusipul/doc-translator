@@ -19,22 +19,22 @@ def extract_texts(file_bytes: bytes) -> list[dict]:
             shape_id = shape.shape_id
             if shape.has_text_frame:
                 for pi, para in enumerate(shape.text_frame.paragraphs):
-                    for ri, run in enumerate(para.runs):
-                        if run.text.strip():
-                            segments.append({
-                                "text": run.text,
-                                "key": (si, shape_id, -1, -1, pi, ri),
-                            })
+                    text = "".join(run.text for run in para.runs)
+                    if text.strip():
+                        segments.append({
+                            "text": text,
+                            "key": (si, shape_id, -1, -1, pi),
+                        })
             elif shape.has_table:
                 for rowi, row in enumerate(shape.table.rows):
                     for coli, cell in enumerate(row.cells):
                         for pi, para in enumerate(cell.text_frame.paragraphs):
-                            for ri, run in enumerate(para.runs):
-                                if run.text.strip():
-                                    segments.append({
-                                        "text": run.text,
-                                        "key": (si, shape_id, rowi, coli, pi, ri),
-                                    })
+                            text = "".join(run.text for run in para.runs)
+                            if text.strip():
+                                segments.append({
+                                    "text": text,
+                                    "key": (si, shape_id, rowi, coli, pi),
+                                })
     return segments
 
 
@@ -48,18 +48,24 @@ def reinsert_texts(file_bytes: bytes, segments: list[dict], translated: list[str
             shape_id = shape.shape_id
             if shape.has_text_frame:
                 for pi, para in enumerate(shape.text_frame.paragraphs):
-                    for ri, run in enumerate(para.runs):
-                        key = (si, shape_id, -1, -1, pi, ri)
-                        if key in key_to_translation:
-                            run.text = key_to_translation[key]
+                    key = (si, shape_id, -1, -1, pi)
+                    if key in key_to_translation:
+                        runs = para.runs
+                        if runs:
+                            runs[0].text = key_to_translation[key]
+                            for run in runs[1:]:
+                                run.text = ""
             elif shape.has_table:
                 for rowi, row in enumerate(shape.table.rows):
                     for coli, cell in enumerate(row.cells):
                         for pi, para in enumerate(cell.text_frame.paragraphs):
-                            for ri, run in enumerate(para.runs):
-                                key = (si, shape_id, rowi, coli, pi, ri)
-                                if key in key_to_translation:
-                                    run.text = key_to_translation[key]
+                            key = (si, shape_id, rowi, coli, pi)
+                            if key in key_to_translation:
+                                runs = para.runs
+                                if runs:
+                                    runs[0].text = key_to_translation[key]
+                                    for run in runs[1:]:
+                                        run.text = ""
     buf = io.BytesIO()
     prs.save(buf)
     return buf.getvalue()

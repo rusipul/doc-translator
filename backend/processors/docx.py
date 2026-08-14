@@ -2,10 +2,8 @@ import io
 from docx import Document
 
 
-def _iter_table_runs(table, base_key: tuple):
-    """Yield (run, key) for all runs in a table, recursing into nested tables."""
+def _iter_table_paragraphs(table, base_key: tuple):
     # Keep strong references to _tc proxies so lxml doesn't GC them.
-    # Using id() is unreliable: freed proxy addresses get reused for unrelated cells.
     seen_tcs: set = set()
     for ri, row in enumerate(table.rows):
         for ci, cell in enumerate(row.cells):
@@ -14,27 +12,25 @@ def _iter_table_runs(table, base_key: tuple):
             seen_tcs.add(cell._tc)
             cell_key = (*base_key, ri, ci)
             for pi, para in enumerate(cell.paragraphs):
-                for ji, run in enumerate(para.runs):
-                    yield run, (*cell_key, pi, ji)
+                yield para, (*cell_key, pi)
             for nti, nested_table in enumerate(cell.tables):
-                yield from _iter_table_runs(nested_table, (*cell_key, nti))
+                yield from _iter_table_paragraphs(nested_table, (*cell_key, nti))
 
 
-def _iter_runs(doc: Document):
-    """Yield (run, key) for all runs in body paragraphs and tables."""
+def _iter_paragraphs(doc: Document):
     for i, para in enumerate(doc.paragraphs):
-        for j, run in enumerate(para.runs):
-            yield run, ("para", i, j)
+        yield para, ("para", i)
     for ti, table in enumerate(doc.tables):
-        yield from _iter_table_runs(table, ("table", ti))
+        yield from _iter_table_paragraphs(table, ("table", ti))
 
 
 def extract_texts(file_bytes: bytes) -> list[dict]:
     doc = Document(io.BytesIO(file_bytes))
     segments = []
-    for run, key in _iter_runs(doc):
-        if run.text.strip():
-            segments.append({"text": run.text, "key": key})
+    for para, key in _iter_paragraphs(doc):
+        text = "".join(run.text for run in para.runs)
+        if text.strip():
+            segments.append({"text": text, "key": key})
     return segments
 
 
@@ -43,10 +39,14 @@ def reinsert_texts(file_bytes: bytes, segments: list[dict], translated: list[str
     key_to_translation = {
         tuple(s["key"]): t for s, t in zip(segments, translated)
     }
-    for run, key in _iter_runs(doc):
+    for para, key in _iter_paragraphs(doc):
         t = key_to_translation.get(tuple(key))
         if t is not None:
-            run.text = t
+            runs = para.runs
+            if runs:
+                runs[0].text = t
+                for run in runs[1:]:
+                    run.text = ""
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
