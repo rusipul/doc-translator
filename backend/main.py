@@ -24,6 +24,18 @@ app.add_middleware(
     expose_headers=["Content-Disposition"],
 )
 
+# ALLOWED_IPS env var: comma-separated IPs. If not set, no restriction.
+_allowed_ips = {ip.strip() for ip in os.environ.get("ALLOWED_IPS", "").split(",") if ip.strip()}
+
+@app.middleware("http")
+async def ip_whitelist(request: Request, call_next):
+    if _allowed_ips and request.url.path != "/health":
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host or "")
+        if client_ip not in _allowed_ips:
+            return JSONResponse(status_code=403, content={"detail": "허가되지 않은 IP입니다"})
+    return await call_next(request)
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     tb = traceback.format_exc()
