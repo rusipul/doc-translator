@@ -28,11 +28,19 @@ export const api = {
       body: JSON.stringify({ api_key }),
     }),
 
-  translate: (file: File, targetLang: string, sourceLang?: string) => {
+  translate: (file: File, targetLang: string, engine: string, sourceLang?: string) => {
     const form = new FormData()
     form.append('file', file)
     form.append('target_lang', targetLang)
+    form.append('engine', engine)
     if (sourceLang) form.append('source_lang', sourceLang)
     return request('/translate', { method: 'POST', body: form })
   },
+
+  updateGoogleApiKey: (api_key: string) =>
+    request('/settings/google-api-key', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key }),
+    }),
 }

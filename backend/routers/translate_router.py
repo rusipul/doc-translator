@@ -6,6 +6,7 @@ from fastapi.responses import Response
 from auth import require_auth
 import config
 import translate as tr
+import translate_google as tr_google
 from processors import docx as docx_proc
 from processors import xlsx as xlsx_proc
 from processors import pptx as pptx_proc
@@ -43,14 +44,20 @@ async def translate_file(
     file: UploadFile = File(...),
     target_lang: str = Form(...),
     source_lang: str | None = Form(default=None),
+    engine: str = Form(default="openai"),
 ):
     ext = (file.filename or "").rsplit(".", 1)[-1].lower()
     if ext not in PROCESSORS:
         raise HTTPException(status_code=400, detail=f"지원하지 않는 파일 형식: .{ext}")
 
-    api_key = config.get_api_key()
-    if not api_key:
-        raise HTTPException(status_code=503, detail="API 키가 설정되지 않았습니다")
+    if engine == "google":
+        api_key = config.get_google_api_key()
+        if not api_key:
+            raise HTTPException(status_code=503, detail="Google API 키가 설정되지 않았습니다")
+    else:
+        api_key = config.get_api_key()
+        if not api_key:
+            raise HTTPException(status_code=503, detail="OpenAI API 키가 설정되지 않았습니다")
 
     # NOTE: file is fully buffered before size check. For production, enforce
     # the limit at the Nginx/reverse-proxy level (client_max_body_size 20m).
@@ -66,7 +73,8 @@ async def translate_file(
 
     if segments:
         try:
-            translated = tr.batch_translate(
+            translator = tr_google if engine == "google" else tr
+            translated = translator.batch_translate(
                 [s["text"] for s in segments],
                 target_lang=target_lang,
                 api_key=api_key,

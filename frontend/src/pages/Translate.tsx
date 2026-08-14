@@ -15,6 +15,7 @@ type State = 'idle' | 'translating' | 'done' | 'error'
 export default function Translate() {
   const [file, setFile] = useState<File | null>(null)
   const [targetLang, setTargetLang] = useState('en')
+  const [engine, setEngine] = useState<'openai' | 'google'>('openai')
   const [state, setState] = useState<State>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [downloadUrl, setDownloadUrl] = useState('')
@@ -56,7 +57,7 @@ export default function Translate() {
     setErrorMsg('')
 
     try {
-      const res = await api.translate(file, targetLang)
+      const res = await api.translate(file, targetLang, engine)
       if (res.ok) {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
@@ -118,6 +119,31 @@ export default function Translate() {
             style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #444', background: '#1a1a1a', color: '#fff' }}>
             {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select>
+        </div>
+      </div>
+
+      {/* Engine selection */}
+      <div>
+        <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 8 }}>번역 엔진</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setEngine('openai')}
+            style={{
+              flex: 1, padding: '10px 0', borderRadius: 8, border: `2px solid ${engine === 'openai' ? '#3b5bdb' : '#444'}`,
+              background: engine === 'openai' ? '#1e2a5e' : '#1a1a1a', color: engine === 'openai' ? '#74c0fc' : '#888',
+              cursor: 'pointer', fontWeight: engine === 'openai' ? 'bold' : 'normal', fontSize: 14,
+            }}>
+            🤖 ChatGPT
+          </button>
+          <button
+            onClick={() => setEngine('google')}
+            style={{
+              flex: 1, padding: '10px 0', borderRadius: 8, border: `2px solid ${engine === 'google' ? '#1a7340' : '#444'}`,
+              background: engine === 'google' ? '#0d2b1e' : '#1a1a1a', color: engine === 'google' ? '#69db7c' : '#888',
+              cursor: 'pointer', fontWeight: engine === 'google' ? 'bold' : 'normal', fontSize: 14,
+            }}>
+            🌐 Google
+          </button>
         </div>
       </div>
 
