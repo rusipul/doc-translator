@@ -53,7 +53,17 @@ def batch_translate(
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": "You are a professional translator. Translate accurately and naturally, preserving the original meaning and tone."},
+                        {"role": "system", "content": (
+                            f"You are a professional business document translator. "
+                            f"Translate each text naturally and idiomatically into {lang_name}. "
+                            "Rules:\n"
+                            "- Use natural, idiomatic expressions (e.g. '7월' → 'July', not '7 monthly')\n"
+                            "- Korean months: 1월=January, 2월=February, ..., 12월=December\n"
+                            "- Preserve numbers, units, product codes, and proper nouns as-is\n"
+                            "- Keep formatting symbols (%, /, -, etc.) unchanged\n"
+                            "- For very short fragments (single words or abbreviations), infer meaning from business context\n"
+                            "- Never add explanations or notes to translations"
+                        )},
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
