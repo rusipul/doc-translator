@@ -1,7 +1,7 @@
 import json
 from openai import OpenAI
 
-BATCH_SIZE = 50
+BATCH_SIZE = 30
 
 _LANG_NAMES = {
     "en": "English",
@@ -158,9 +158,11 @@ def batch_translate(
                     temperature=0.1,
                 )
                 body = json.loads(response.choices[0].message.content)
-                # Reconstruct in original order by numeric key
-                translated = [body[str(j)] for j in range(len(chunk))]
-                results.extend(translated)
+                missing = [j for j in range(len(chunk)) if str(j) not in body]
+                if missing:
+                    last_exc = TranslateError(f"Missing keys in response: {missing}")
+                    continue
+                results.extend(body[str(j)] for j in range(len(chunk)))
                 last_exc = None
                 break
             except (KeyError, TypeError) as e:
@@ -169,6 +171,8 @@ def batch_translate(
                 last_exc = e
 
         if last_exc is not None:
-            raise TranslateError(str(last_exc)) from last_exc
+            # After 3 retries, fall back to original text rather than failing entirely
+            print(f"[translate] Batch {i}~{i+len(chunk)-1} failed after retries: {last_exc}. Using original text.")
+            results.extend(chunk)
 
     return results
