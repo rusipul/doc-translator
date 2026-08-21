@@ -50,13 +50,27 @@ def reinsert_texts(file_bytes: bytes, segments: list[dict], translated: list[str
                 for item in inserts:
                     page.add_redact_annot(item["bbox"], fill=(1, 1, 1))
                 page.apply_redactions()
+                # Use built-in CJK font so Korean/Chinese/Japanese renders correctly.
+                # "cjk" (Droid Sans Fallback) is bundled with PyMuPDF — no extra install needed.
+                cjk_font = fitz.Font("cjk")
+                tw = fitz.TextWriter(page.rect)
                 for item in inserts:
-                    page.insert_text(
-                        item["origin"],
-                        item["text"],
-                        fontname="helv",
-                        fontsize=item["size"],
-                    )
+                    try:
+                        tw.append(
+                            fitz.Point(item["origin"]),
+                            item["text"],
+                            font=cjk_font,
+                            fontsize=item["size"],
+                        )
+                    except Exception:
+                        # Fallback for any character the CJK font can't encode
+                        page.insert_text(
+                            item["origin"],
+                            item["text"],
+                            fontname="helv",
+                            fontsize=item["size"],
+                        )
+                tw.write_text(page)
         buf = io.BytesIO()
         doc.save(buf)
     finally:
